@@ -65,7 +65,7 @@ def trithemius(text: str, mode: str = "encode", start: int = 0) -> str:
 
 # --- Короткая проверка ---
 if __name__ == "__main__":
-    plain = "Атака на рассвете! Attack at dawn!"
+    plain = "не все те поваразпт что с длинными ножами ходяттчк"
     c = trithemius(plain, "encode", start=0)
     d = trithemius(c, "decode", start=0)
     print("cipher:", c)
