@@ -51,8 +51,8 @@ def bellaso_decrypt(text: str, key: str) -> str:
 # Пример
 if __name__ == "__main__":
     phrase = "не все те поваразпт что с длинными ножами ходяттчк"
-    key = "КлЮч-2025"
+    key = "гермес"
     c = bellaso_encrypt(phrase, key)
     d = bellaso_decrypt(c, key)
     print("cipher :", c)
-    print("decoded:", d)
+    print("decoded:", d) 
