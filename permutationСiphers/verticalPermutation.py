@@ -1,101 +1,65 @@
 from baseFunctionForCryptography.baseFunction import *
 
-print(f"{YELLOW}_______________ШИФР ВЕРТИКАЛЬНОЙ ПЕРЕСТАНОВКИ__________________{RESET}")
+# ─────────────────────────────────────────────────────────
+# Вспомогательные функции
+# ─────────────────────────────────────────────────────────
+
+def _build_column_order(key: str) -> list[int]:
+    """
+    Строим порядок столбцов (number_sim) по алфавиту ALPHABET.
+    """
+    count_col = len(key)
+    number_sim = [-1 for _ in range(count_col)]
+    num = 0
+    for sim in ALPHABET:
+        if sim in key:
+            for ind, sim_k in enumerate(key):
+                if sim == sim_k and number_sim[ind] == -1:
+                    number_sim[ind] = num
+                    num += 1
+
+    if -1 in number_sim:
+        raise ValueError("Ошибка в ключе: не удалось построить перестановку столбцов.")
+
+    return number_sim
+
+
+def _matrix_to_lines(matrix: list[list[str]]) -> list[str]:
+    return [" ".join(row) for row in matrix]
+
 
 # ─────────────────────────────────────────────────────────
-# Выбор режима
+# Основные функции: шифрование / расшифровка
 # ─────────────────────────────────────────────────────────
-while True:
-    mode = input(
-        "Выберите режим:\n"
-        "1 - шифрование\n"
-        "2 - расшифровка\n"
-        "Ваш выбор (Enter = 1): "
-    ).strip()
-    if mode in ("", "1", "2"):
-        break
-    print(f"{RED}Нужно ввести 1, 2 или Enter.{RESET}")
 
-is_encrypt = False if mode == "2" else True
+def encrypt_vertical(text: str, key: str) -> tuple[str, str]:
+    """
+    Шифрование вертикальной перестановкой.
+    Возвращает (debug_text, cipher_text).
+    """
+    text_norm = normalize_text(text=text)
+    if len(text_norm) == 0:
+        raise ValueError("Текст после нормализации пуст.")
 
-# ─────────────────────────────────────────────────────────
-# Ввод текста и ключа
-# ─────────────────────────────────────────────────────────
-if is_encrypt:
-    while True:
-        text_ = input("Введите свой текст для шифрования или Enter для моего текста: ")
-        if text_ == "":
-            text = normalize_text()
-        else:
-            text = normalize_text(text=text_)
-        if len(text) == 0:
-            print(f"{RED}Текст после нормализации пуст. Введите другой текст.{RESET}")
-            continue
-        break
+    if not key:
+        raise ValueError("Ключ не должен быть пустым.")
 
-    while True:
-        key_ = input("Введите ключ для шифрования или Enter для моего ключа: ")
-        if key_ == "":
-            key = "машина"
-        else:
-            key = normalize_text(text=key_)
-        if len(key) == 0:
-            print(f"{RED}Ключ после нормализации пуст. Введите другой ключ.{RESET}")
-            continue
-        break
+    key_norm = normalize_text(text=key)
+    if len(key_norm) == 0:
+        raise ValueError("Ключ после нормализации пуст.")
 
-    chipper_text_input = None
-else:
-    while True:
-        chipper_text_input = input("Введите зашифрованный текст: ")
-        chipper_text_input = normalize_text(text=chipper_text_input)
-        if len(chipper_text_input) == 0:
-            print(f"{RED}Шифртекст после нормализации пуст. Введите другой текст.{RESET}")
-            continue
-        break
-
-    while True:
-        key_ = input("Введите ключ для расшифровки или Enter для моего ключа: ")
-        if key_ == "":
-            key = "машина"
-        else:
-            key = normalize_text(text=key_)
-        if len(key) == 0:
-            print(f"{RED}Ключ после нормализации пуст. Введите другой ключ.{RESET}")
-            continue
-        break
-
-# ─────────────────────────────────────────────────────────
-# Общие параметры: ключ и номера столбцов
-# ─────────────────────────────────────────────────────────
-count_col = len(key)
-
-number_sim = [-1 for _ in range(count_col)]
-num = 0
-for sim in ALPHABET:
-    if sim in key:
-        for ind, sim_k in enumerate(key):
-            if sim == sim_k and number_sim[ind] == -1:
-                number_sim[ind] = num
-                num += 1
-
-if -1 in number_sim:
-    print(f"{RED}Ошибка в ключе: не удалось построить перестановку столбцов.{RESET}")
-    exit(1)
-
-# ─────────────────────────────────────────────────────────
-# ШИФРОВАНИЕ
-# ─────────────────────────────────────────────────────────
-if is_encrypt:
-    count_string = len(text) // count_col + 1 if len(text) % count_col != 0 else len(text) // count_col
+    count_col = len(key_norm)
+    L = len(text_norm)
+    count_string = L // count_col + (1 if L % count_col != 0 else 0)
 
     matrix_sim = [
-        [text[i * count_col + j] if (i * count_col + j) < len(text) else "-" for j in range(count_col)]
+        [text_norm[i * count_col + j] if (i * count_col + j) < L else "-" for j in range(count_col)]
         for i in range(count_string)
     ]
 
-    chipper_text = ""
+    number_sim = _build_column_order(key_norm)
 
+    chipper_text = ""
     for number_col in range(count_col):
         j = number_sim.index(number_col)
         for i in range(count_string):
@@ -103,39 +67,49 @@ if is_encrypt:
 
     chipper_text = chipper_text.replace("-", "")
 
-    print(f"{YELLOW}______________Отладочная информация (ШИФРОВАНИЕ)____________________{RESET}")
+    debug_lines: list[str] = []
+    debug_lines.append("Матрица текста:")
+    debug_lines.extend(_matrix_to_lines(matrix_sim))
+    debug_lines.append("")
+    debug_lines.append(f"Заданный ключ: '{key_norm}'")
+    str_num = "".join(str(num) for num in number_sim)
+    debug_lines.append(f"Номера букв в ключе: {str_num}")
 
-    print(f"{CYAN}Матрица текста:{RESET}")
-    print_matrix(matrix_sim)
+    debug_text = "\n".join(debug_lines)
+    return debug_text, chipper_text
 
-    print(f"{GREEN}Заданный ключ: '{key}'{RESET}")
 
-    str_num = ''.join([str(num) for num in number_sim])
-    print(f"{MAGENTA}Номера букв в ключе: {str_num}{RESET}")
+def decrypt_vertical(cipher_text: str, key: str) -> tuple[str, str]:
+    """
+    Расшифровка вертикальной перестановки.
+    Возвращает (debug_text, plain_text).
+    """
+    chipper_norm = normalize_text(text=cipher_text)
+    if len(chipper_norm) == 0:
+        raise ValueError("Шифртекст после нормализации пуст.")
 
-    print()
-    print(f"{WHITE_BRIGHT}Зашифрованный текст: {output_text(chipper_text, not_print=True)}{RESET}")
+    if not key:
+        raise ValueError("Ключ не должен быть пустым.")
 
-# ─────────────────────────────────────────────────────────
-# РАСШИФРОВКА
-# ─────────────────────────────────────────────────────────
-else:
-    chipper_text = chipper_text_input
-    L = len(chipper_text)
+    key_norm = normalize_text(text=key)
+    if len(key_norm) == 0:
+        raise ValueError("Ключ после нормализации пуст.")
 
-    count_string = L // count_col + 1 if L % count_col != 0 else L // count_col
+    count_col = len(key_norm)
+    number_sim = _build_column_order(key_norm)
+
+    L = len(chipper_norm)
+    count_string = L // count_col + (1 if L % count_col != 0 else 0)
 
     cells = count_string * count_col
     pad_count = cells - L
-
     if pad_count > 0:
         last_row_filled = count_col - pad_count
     else:
         last_row_filled = count_col
 
     if last_row_filled <= 0 or last_row_filled > count_col:
-        print(f"{RED}Несоответствие длины шифртекста и ключа. Проверьте ввод.{RESET}")
-        exit(1)
+        raise ValueError("Несоответствие длины шифртекста и ключа. Проверьте ввод.")
 
     matrix_sim = [["-" for _ in range(count_col)] for _ in range(count_string)]
 
@@ -155,9 +129,8 @@ else:
         if (i, j) in pad_positions:
             continue
         if ind >= L:
-            print(f"{RED}Несоответствие длины шифртекста и параметров матрицы.{RESET}")
-            exit(1)
-        matrix_sim[i][j] = chipper_text[ind]
+            raise ValueError("Несоответствие длины шифртекста и параметров матрицы.")
+        matrix_sim[i][j] = chipper_norm[ind]
         ind += 1
 
     text_result = ""
@@ -167,15 +140,94 @@ else:
             if ch != "-":
                 text_result += ch
 
-    print(f"{YELLOW}______________Отладочная информация (РАСШИФРОВКА)__________________{RESET}")
+    debug_lines: list[str] = []
+    debug_lines.append("Матрица шифртекста:")
+    debug_lines.extend(_matrix_to_lines(matrix_sim))
+    debug_lines.append("")
+    debug_lines.append(f"Использованный ключ: '{key_norm}'")
+    str_num = "".join(str(num) for num in number_sim)
+    debug_lines.append(f"Номера букв в ключе: {str_num}")
 
-    print(f"{CYAN}Матрица шифртекста:{RESET}")
-    print_matrix(matrix_sim)
+    debug_text = "\n".join(debug_lines)
+    return debug_text, text_result
 
-    print(f"{GREEN}Использованный ключ: '{key}'{RESET}")
 
-    str_num = ''.join([str(num) for num in number_sim])
-    print(f"{MAGENTA}Номера букв в ключе: {str_num}{RESET}")
+# ─────────────────────────────────────────────────────────
+# Простой CLI-режим для проверки
+# ─────────────────────────────────────────────────────────
 
-    print()
-    print(f"{WHITE_BRIGHT}Расшифрованный текст: {text_result}{RESET}")
+if __name__ == "__main__":
+    print(f"{YELLOW}_______________ШИФР ВЕРТИКАЛЬНОЙ ПЕРЕСТАНОВКИ (CLI)__________________{RESET}")
+
+    while True:
+        mode = input(
+            "Выберите режим:\n"
+            "1 - шифрование\n"
+            "2 - расшифровка\n"
+            "Ваш выбор (Enter = 1): "
+        ).strip()
+        if mode in ("", "1", "2"):
+            break
+        print(f"{RED}Нужно ввести 1, 2 или Enter.{RESET}")
+
+    is_encrypt = False if mode == "2" else True
+
+    if is_encrypt:
+        while True:
+            text_ = input("Введите свой текст для шифрования или Enter для моего текста: ")
+            if text_ == "":
+                text_raw = normalize_text()
+            else:
+                text_raw = text_
+            if len(normalize_text(text=text_raw)) == 0:
+                print(f"{RED}Текст после нормализации пуст. Введите другой текст.{RESET}")
+                continue
+            break
+
+        while True:
+            key_ = input("Введите ключ для шифрования или Enter для моего ключа: ")
+            if key_ == "":
+                key_raw = "машина"
+            else:
+                key_raw = key_
+            if len(normalize_text(text=key_raw)) == 0:
+                print(f"{RED}Ключ после нормализации пуст. Введите другой ключ.{RESET}")
+                continue
+            break
+
+        try:
+            debug, result = encrypt_vertical(text_raw, key_raw)
+            print(f"{YELLOW}______________Отладочная информация (ШИФРОВАНИЕ)____________________{RESET}")
+            print(debug)
+            print()
+            print(f"{WHITE_BRIGHT}Зашифрованный текст: {output_text(result, not_print=True)}{RESET}")
+        except Exception as e:
+            print(f"{RED}Ошибка: {e}{RESET}")
+
+    else:
+        while True:
+            chipper_text_input = input("Введите зашифрованный текст: ")
+            if len(normalize_text(text=chipper_text_input)) == 0:
+                print(f"{RED}Шифртекст после нормализации пуст. Введите другой текст.{RESET}")
+                continue
+            break
+
+        while True:
+            key_ = input("Введите ключ для расшифровки или Enter для моего ключа: ")
+            if key_ == "":
+                key_raw = "машина"
+            else:
+                key_raw = key_
+            if len(normalize_text(text=key_raw)) == 0:
+                print(f"{RED}Ключ после нормализации пуст. Введите другой ключ.{RESET}")
+                continue
+            break
+
+        try:
+            debug, result = decrypt_vertical(chipper_text_input, key_raw)
+            print(f"{YELLOW}______________Отладочная информация (РАСШИФРОВКА)__________________{RESET}")
+            print(debug)
+            print()
+            print(f"{WHITE_BRIGHT}Расшифрованный текст: {output_text(result, not_print=True)}{RESET}")
+        except Exception as e:
+            print(f"{RED}Ошибка: {e}{RESET}")
