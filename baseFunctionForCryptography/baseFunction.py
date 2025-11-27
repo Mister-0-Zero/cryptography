@@ -19,10 +19,12 @@ def print_matrix(matrix):
 
 
 ALPHABET = "абвгдежзийклмнопрстуфхцчшщъыьэюя"
-RESET = "\033[0m"
 
+RESET = "\033[0m"
 YELLOW = "\033[33m"
 CYAN = "\033[36m"
 GREEN = "\033[32m"
 MAGENTA = "\033[35m"
 WHITE_BRIGHT = "\033[97m"
+RED = "\033[31m"
+
