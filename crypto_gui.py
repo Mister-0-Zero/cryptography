@@ -4,7 +4,13 @@ from permutationСiphers.blockPermutation import encrypt_block, decrypt_block
 from permutationСiphers.routeRearrangement import encrypt_route, decrypt_route
 from permutationСiphers.verticalPermutation import encrypt_vertical, decrypt_vertical
 
-from baseFunctionForCryptography.baseFunction import normalize_text, output_text
+from baseFunctionForCryptography.baseFunction import (
+    normalize_encrypt,
+    normalize_decrypt,
+    output_encrypt,
+    output_decrypt,
+)
+
 
 BG_GRAD = ft.LinearGradient(
     begin=ft.alignment.top_left,
@@ -158,6 +164,7 @@ def main(page: ft.Page):
         bgcolor=BLOCK_BG,
         border_radius=12,
         padding=10,
+        expand=True,
         content=ft.Column(
             [
                 ft.Text("Отладочная информация", color=TEXT_LIGHT, size=20),
@@ -165,6 +172,7 @@ def main(page: ft.Page):
                 debug_list,
             ],
             expand=True,
+            scroll=ft.ScrollMode.AUTO,
         ),
     )
 
@@ -178,6 +186,23 @@ def main(page: ft.Page):
         border_color="#5F1F82",
         text_style=ft.TextStyle(size=18),
     )
+
+    result_container = ft.Container(
+        bgcolor=BLOCK_BG,
+        border_radius=12,
+        padding=10,
+        expand=True,  # <<< вторая половина правой части
+        content=ft.Column(
+            [
+                ft.Text("Результат", color=TEXT_LIGHT, size=20),
+                ft.Divider(color="#3A124F", height=1),
+                result_output,
+            ],
+            expand=True,
+            scroll=ft.ScrollMode.AUTO,  # <<< отдельный скролл для результата
+        ),
+    )
+
 
     # ---------- служебные функции ----------
 
@@ -260,28 +285,33 @@ def main(page: ft.Page):
             )
 
     # ---------- обработчик кнопки ----------
-
     def run_cipher(e):
         result_output.value = ""
         status_text.value = ""
 
         cipher = cipher_select.value
         mode = mode_select.value
-        txt = input_text.value
+        raw_txt = input_text.value
+
+        # нормализация для шифрования/расшифровки
+        if mode == "encrypt":
+            working_txt = normalize_encrypt(raw_txt)
+        else:
+            working_txt = normalize_decrypt(raw_txt)
 
         try:
             # Вертикальная
             if cipher == "vertical":
                 key = key_field.value
                 if mode == "encrypt":
-                    dbg, res = encrypt_vertical(txt, key)
+                    dbg, res = encrypt_vertical(working_txt, key)
                 else:
-                    dbg, res = decrypt_vertical(txt, key)
+                    dbg, res = decrypt_vertical(working_txt, key)
 
             # Маршрутная
             elif cipher == "route":
                 # длина нормализованного текста/шифртекста
-                norm_len = len(normalize_text(text=txt))
+                norm_len = len(working_txt)
                 if norm_len == 0:
                     raise ValueError("Текст после нормализации пуст.")
 
@@ -311,9 +341,9 @@ def main(page: ft.Page):
                 rmode = ROUTE_TO_INT[route_mode.value]
 
                 if mode == "encrypt":
-                    dbg, res = encrypt_route(txt, rows, cols, rmode)
+                    dbg, res = encrypt_route(working_txt, rows, cols, rmode)
                 else:
-                    dbg, res = decrypt_route(txt, rows, cols, rmode)
+                    dbg, res = decrypt_route(working_txt, rows, cols, rmode)
 
             # Блочная
             elif cipher == "block":
@@ -324,14 +354,20 @@ def main(page: ft.Page):
                     raise ValueError("Размер блока должен быть > 1.")
                 perm = block_perm.value or ""
                 if mode == "encrypt":
-                    dbg, res = encrypt_block(txt, size, perm)
+                    dbg, res = encrypt_block(working_txt, size, perm)
                 else:
-                    dbg, res = decrypt_block(txt, size, perm)
+                    dbg, res = decrypt_block(working_txt, size, perm)
             else:
                 raise ValueError("Неизвестный шифр.")
 
             render_debug(dbg, is_error=False)
-            result_output.value = output_text(res, not_print=True)
+
+            # вывод в GUI с нужной денормализацией
+            if mode == "encrypt":
+                result_output.value = output_encrypt(res, not_print=True)
+            else:
+                result_output.value = output_decrypt(res, not_print=True)
+
             status_text.value = "Готово."
 
         except Exception as ex:
@@ -340,6 +376,7 @@ def main(page: ft.Page):
             status_text.value = "Произошла ошибка."
 
         page.update()
+
 
     run_button = ft.ElevatedButton(
         text="Выполнить",
@@ -389,12 +426,13 @@ def main(page: ft.Page):
         content=ft.Column(
             [
                 debug_container,
-                result_output,
+                result_container,
             ],
             spacing=12,
             expand=True,
         ),
-    )
+)
+
 
     page.add(
         ft.Row(

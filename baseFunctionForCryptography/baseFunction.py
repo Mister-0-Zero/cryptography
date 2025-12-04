@@ -1,8 +1,11 @@
-def normalize_text(text: str = "Не все те повара, что с длинными ножами ходят.") -> str:
-    norm_text = text.replace(" ", "").lower().replace(",", "зпт").replace(".", "тчк")
+def normalize_encrypt(text: str = "Не все те повара, что с длинными ножами ходят.") -> str:
+    norm_text = text.replace(" ", "прб").lower().replace(",", "зпт").replace(".", "тчк")
     return norm_text
 
-def output_text(text: str, not_print = False) -> str:
+def normalize_decrypt(text: str) -> str:
+    return text.replace(" ", "").lower()
+
+def output_encrypt(text: str, not_print = True) -> str:
     res = ""
     for ind, sim in enumerate(text):
         if ind % 5 == 0 and ind != 0:
@@ -10,6 +13,9 @@ def output_text(text: str, not_print = False) -> str:
         res += sim
     if not not_print: print(res)
     return res
+
+def output_decrypt(text: str, not_print = True) -> str:
+    return text.replace("прб", " ").replace("зпт", ",").replace("тчк", ".")
 
 def print_matrix(matrix):
     print()

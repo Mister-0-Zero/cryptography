@@ -37,14 +37,14 @@ def encrypt_vertical(text: str, key: str) -> tuple[str, str]:
     Шифрование вертикальной перестановкой.
     Возвращает (debug_text, cipher_text).
     """
-    text_norm = normalize_text(text=text)
+    text_norm = normalize_encrypt(text=text)
     if len(text_norm) == 0:
         raise ValueError("Текст после нормализации пуст.")
 
     if not key:
         raise ValueError("Ключ не должен быть пустым.")
 
-    key_norm = normalize_text(text=key)
+    key_norm = normalize_encrypt(text=key)
     if len(key_norm) == 0:
         raise ValueError("Ключ после нормализации пуст.")
 
@@ -84,14 +84,14 @@ def decrypt_vertical(cipher_text: str, key: str) -> tuple[str, str]:
     Расшифровка вертикальной перестановки.
     Возвращает (debug_text, plain_text).
     """
-    chipper_norm = normalize_text(text=cipher_text)
+    chipper_norm = normalize_decrypt(text=cipher_text)
     if len(chipper_norm) == 0:
         raise ValueError("Шифртекст после нормализации пуст.")
 
     if not key:
         raise ValueError("Ключ не должен быть пустым.")
 
-    key_norm = normalize_text(text=key)
+    key_norm = normalize_decrypt(text=key)
     if len(key_norm) == 0:
         raise ValueError("Ключ после нормализации пуст.")
 
@@ -176,12 +176,9 @@ if __name__ == "__main__":
         while True:
             text_ = input("Введите свой текст для шифрования или Enter для моего текста: ")
             if text_ == "":
-                text_raw = normalize_text()
+                text_raw = normalize_encrypt()
             else:
-                text_raw = text_
-            if len(normalize_text(text=text_raw)) == 0:
-                print(f"{RED}Текст после нормализации пуст. Введите другой текст.{RESET}")
-                continue
+                text_raw = normalize_decrypt(text_)
             break
 
         while True:
@@ -189,8 +186,8 @@ if __name__ == "__main__":
             if key_ == "":
                 key_raw = "машина"
             else:
-                key_raw = key_
-            if len(normalize_text(text=key_raw)) == 0:
+                key_raw = normalize_encrypt(key_)
+            if len(normalize_encrypt(text=key_raw)) == 0:
                 print(f"{RED}Ключ после нормализации пуст. Введите другой ключ.{RESET}")
                 continue
             break
@@ -200,14 +197,14 @@ if __name__ == "__main__":
             print(f"{YELLOW}______________Отладочная информация (ШИФРОВАНИЕ)____________________{RESET}")
             print(debug)
             print()
-            print(f"{WHITE_BRIGHT}Зашифрованный текст: {output_text(result, not_print=True)}{RESET}")
+            print(f"{WHITE_BRIGHT}Зашифрованный текст: {output_encrypt(result, not_print=True)}{RESET}")
         except Exception as e:
             print(f"{RED}Ошибка: {e}{RESET}")
 
     else:
         while True:
             chipper_text_input = input("Введите зашифрованный текст: ")
-            if len(normalize_text(text=chipper_text_input)) == 0:
+            if len(normalize_decrypt(text=chipper_text_input)) == 0:
                 print(f"{RED}Шифртекст после нормализации пуст. Введите другой текст.{RESET}")
                 continue
             break
@@ -217,8 +214,8 @@ if __name__ == "__main__":
             if key_ == "":
                 key_raw = "машина"
             else:
-                key_raw = key_
-            if len(normalize_text(text=key_raw)) == 0:
+                key_raw = normalize_encrypt(key_)
+            if len(normalize_encrypt(text=key_raw)) == 0:
                 print(f"{RED}Ключ после нормализации пуст. Введите другой ключ.{RESET}")
                 continue
             break
@@ -228,6 +225,6 @@ if __name__ == "__main__":
             print(f"{YELLOW}______________Отладочная информация (РАСШИФРОВКА)__________________{RESET}")
             print(debug)
             print()
-            print(f"{WHITE_BRIGHT}Расшифрованный текст: {output_text(result, not_print=True)}{RESET}")
+            print(f"{WHITE_BRIGHT}Расшифрованный текст: {output_decrypt(result, not_print=True)}{RESET}")
         except Exception as e:
             print(f"{RED}Ошибка: {e}{RESET}")
