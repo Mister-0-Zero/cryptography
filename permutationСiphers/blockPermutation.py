@@ -49,7 +49,7 @@ def _matrix_to_lines(blocks: list[list[str]]) -> list[str]:
 # ─────────────────────────────────────────────────────────
 
 def encrypt_block(text: str, block_size: int, perm_str: str = "") -> tuple[str, str]:
-    text_norm = normalize_text(text=text)
+    text_norm = normalize_encrypt(text=text)
     if len(text_norm) == 0:
         raise ValueError("Текст после нормализации пуст.")
 
@@ -89,7 +89,7 @@ def encrypt_block(text: str, block_size: int, perm_str: str = "") -> tuple[str, 
 
 
 def decrypt_block(cipher_text: str, block_size: int, perm_str: str = "") -> tuple[str, str]:
-    text_norm = normalize_text(text=cipher_text)
+    text_norm = normalize_decrypt(text=cipher_text)
     if len(text_norm) == 0:
         raise ValueError("Шифртекст после нормализации пуст.")
 
@@ -153,11 +153,11 @@ if __name__ == "__main__":
     if is_encrypt:
         text_ = input("Введите текст для шифрования или Enter для моего текста: ")
         if text_ == "":
-            text_raw = normalize_text()
+            text_raw = normalize_encrypt()
         else:
-            text_raw = text_
+            text_raw = normalize_encrypt(text_)
     else:
-        text_raw = input("Введите зашифрованный текст: ")
+        text_raw = normalize_decrypt(input("Введите зашифрованный текст: "))
 
     try:
         block_size_cli = int(input("Введите размер блока (целое > 1): "))
@@ -181,13 +181,13 @@ if __name__ == "__main__":
             print(debug)
             print()
             print(f"{GREEN}Шифртекст:{RESET}")
-            print(f"{WHITE_BRIGHT}{output_text(result, not_print=True)}{RESET}")
+            print(f"{WHITE_BRIGHT}{output_encrypt(result, not_print=True)}{RESET}")
         else:
             debug, result = decrypt_block(text_raw, block_size_cli, perm_line)
             print(f"{YELLOW}______________Отладочная информация (РАСШИФРОВКА)__________________{RESET}")
             print(debug)
             print()
             print(f"{GREEN}Расшифрованный текст:{RESET}")
-            print(f"{WHITE_BRIGHT}{output_text(result, not_print=True)}{RESET}")
+            print(f"{WHITE_BRIGHT}{output_decrypt(result, not_print=True)}{RESET}")
     except Exception as e:
         print(f"{RED}Ошибка: {e}{RESET}")

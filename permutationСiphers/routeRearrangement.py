@@ -88,7 +88,7 @@ def _matrix_to_lines(matrix: list[list[str]]) -> list[str]:
 # ─────────────────────────────────────────────────────────
 
 def encrypt_route(text: str, rows: int, cols: int, mode: int) -> tuple[str, str]:
-    text_norm = normalize_text(text=text)
+    text_norm = normalize_encrypt(text=text)
     if len(text_norm) == 0:
         raise ValueError("Текст после нормализации пуст.")
 
@@ -126,7 +126,7 @@ def encrypt_route(text: str, rows: int, cols: int, mode: int) -> tuple[str, str]
 
 
 def decrypt_route(cipher_text: str, rows: int, cols: int, mode: int) -> tuple[str, str]:
-    text_norm = normalize_text(text=cipher_text)
+    text_norm = normalize_decrypt(text=cipher_text)
     if len(text_norm) == 0:
         raise ValueError("Шифртекст после нормализации пуст.")
 
@@ -188,11 +188,11 @@ if __name__ == "__main__":
     if is_encrypt:
         text_ = input("Введите свой текст для шифрования или Enter для моего текста: ")
         if text_ == "":
-            text_raw = normalize_text()
+            text_raw = normalize_encrypt()
         else:
-            text_raw = text_
+            text_raw = normalize_encrypt(text_)
     else:
-        text_raw = input("Введите зашифрованный текст: ")
+        text_raw = normalize_decrypt(input("Введите зашифрованный текст: "))
 
     while True:
         try:
@@ -204,7 +204,8 @@ if __name__ == "__main__":
             break
         print(f"{RED}Нужно ввести 0 или 1.{RESET}")
 
-    L_cli = len(normalize_text(text=text_raw))
+    if is_encrypt: L_cli = len(normalize_encrypt(text=text_raw))
+    else: L_cli = len(normalize_decrypt(text=text_raw))
 
     if column_or_string == 0:
         while True:
@@ -261,13 +262,13 @@ if __name__ == "__main__":
             print(debug)
             print()
             print(f"{GREEN}Шифртекст:{RESET}")
-            print(f"{WHITE_BRIGHT}{output_text(result, not_print=True)}{RESET}")
+            print(f"{WHITE_BRIGHT}{output_encrypt(result, not_print=True)}{RESET}")
         else:
             debug, result = decrypt_route(text_raw, count_string, count_col, vvod_cli)
             print(f"{YELLOW}______________Отладочная информация (РАСШИФРОВКА)__________________{RESET}")
             print(debug)
             print()
             print(f"{GREEN}Расшифрованный текст:{RESET}")
-            print(f"{WHITE_BRIGHT}{output_text(result, not_print=True)}{RESET}")
+            print(f"{WHITE_BRIGHT}{output_decrypt(result, not_print=True)}{RESET}")
     except Exception as e:
         print(f"{RED}Ошибка: {e}{RESET}")
