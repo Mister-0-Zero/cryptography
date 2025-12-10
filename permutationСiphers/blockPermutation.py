@@ -74,6 +74,9 @@ def encrypt_block(text: str, block_size: int, perm_str: str = "") -> tuple[str, 
 
     cipher_text = "".join(cipher_chars)
 
+    # <<< ВАЖНО: убираем хвостовые 'ф' из результата шифрования >>>
+    cipher_text = cipher_text.rstrip("ф")
+
     debug_lines: list[str] = []
     debug_lines.append("Исходные блоки (после нормализации и дополнения 'ф' при необходимости):")
     debug_lines.extend(_matrix_to_lines(blocks))
@@ -88,18 +91,28 @@ def encrypt_block(text: str, block_size: int, perm_str: str = "") -> tuple[str, 
     return debug_text, cipher_text
 
 
+
 def decrypt_block(cipher_text: str, block_size: int, perm_str: str = "") -> tuple[str, str]:
     text_norm = normalize_decrypt(text=cipher_text)
     if len(text_norm) == 0:
         raise ValueError("Шифртекст после нормализации пуст.")
 
-    if len(text_norm) % block_size != 0:
-        raise ValueError("Длина шифртекста не делится на размер блока. Проверьте ввод.")
-
     perm = _parse_permutation(block_size, perm_str)
 
-    blocks = _blocks_from_text(text_norm, block_size)
+    L = len(text_norm)
+    if L < block_size:
+        raise ValueError("Длина шифртекста меньше размера блока.")
 
+    # дополняем шифртекст 'ф', если длина не делится на размер блока
+    if L % block_size != 0:
+        pad = block_size - (L % block_size)
+        text_padded = text_norm + "ф" * pad
+    else:
+        text_padded = text_norm
+
+    blocks = _blocks_from_text(text_padded, block_size)
+
+    # строим обратную перестановку
     inv = [0] * block_size
     for i in range(block_size):
         inv[perm[i]] = i
@@ -115,9 +128,11 @@ def decrypt_block(cipher_text: str, block_size: int, perm_str: str = "") -> tupl
         plain_chars.extend(orig_block)
 
     plain_text = "".join(plain_chars)
+    # убираем добавленные 'ф' в конце
+    plain_text = plain_text.rstrip("ф")
 
     debug_lines: list[str] = []
-    debug_lines.append("Блоки шифртекста:")
+    debug_lines.append("Блоки шифртекста (c внутренним дополнением 'ф' при необходимости):")
     debug_lines.extend(_matrix_to_lines(blocks))
     debug_lines.append("")
     debug_lines.append("Блоки после обратной перестановки:")
@@ -128,6 +143,8 @@ def decrypt_block(cipher_text: str, block_size: int, perm_str: str = "") -> tupl
 
     debug_text = "\n".join(debug_lines)
     return debug_text, plain_text
+
+
 
 
 # ─────────────────────────────────────────────────────────
