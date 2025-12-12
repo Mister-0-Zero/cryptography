@@ -12,6 +12,17 @@ from baseFunctionForCryptography.baseFunction import (
 )
 
 
+"""
+Графический интерфейс для работы с перестановочными шифрами:
+- вертикальная перестановка;
+- маршрутная перестановка;
+- блочная перестановка.
+Реализованы шифрование, расшифровка и вывод отладочной информации.
+"""
+
+
+# ---------------- НАСТРОЙКИ ОФОРМЛЕНИЯ ----------------
+
 BG_GRAD = ft.LinearGradient(
     begin=ft.alignment.top_left,
     end=ft.alignment.bottom_right,
@@ -43,6 +54,10 @@ ROUTE_TO_INT = {
 
 
 def main(page: ft.Page):
+    """
+    Точка входа Flet-приложения.
+    Строит интерфейс и подключает обработчики событий.
+    """
     page.title = "CryptoLab — Перестановочные шифры"
     page.theme_mode = ft.ThemeMode.DARK
     page.window_maximized = True
@@ -51,7 +66,8 @@ def main(page: ft.Page):
     page.horizontal_alignment = "stretch"
     page.vertical_alignment = "stretch"
 
-    # ---------- левая часть ----------
+    # ---------- левая часть: параметры шифрования ----------
+
     cipher_select = ft.Dropdown(
         label="Выберите шифр",
         options=[
@@ -97,7 +113,7 @@ def main(page: ft.Page):
         text_style=ft.TextStyle(size=18),
     )
 
-    # маршрутная: задаём либо строки, либо столбцы
+    # параметры маршрутной перестановки
     route_dim_mode = ft.Dropdown(
         label="Что задаём",
         options=[
@@ -118,6 +134,7 @@ def main(page: ft.Page):
         border_color=ACCENT,
         text_style=ft.TextStyle(size=18),
     )
+
     route_cols = ft.TextField(
         label="Число столбцов",
         bgcolor=FIELD_BG,
@@ -125,6 +142,7 @@ def main(page: ft.Page):
         border_color=ACCENT,
         text_style=ft.TextStyle(size=18),
     )
+
     route_mode = ft.Dropdown(
         label="Маршрут",
         options=[ft.dropdown.Option(v, title) for v, title in ROUTE_CHOICES],
@@ -135,6 +153,7 @@ def main(page: ft.Page):
         text_style=ft.TextStyle(size=18),
     )
 
+    # параметры блочной перестановки
     block_size = ft.TextField(
         label="Размер блока",
         bgcolor=FIELD_BG,
@@ -142,6 +161,7 @@ def main(page: ft.Page):
         border_color=ACCENT,
         text_style=ft.TextStyle(size=18),
     )
+
     block_perm = ft.TextField(
         label="Перестановка (например: 3 1 4 2, пусто — обратный порядок)",
         bgcolor=FIELD_BG,
@@ -152,7 +172,8 @@ def main(page: ft.Page):
 
     status_text = ft.Text("", color="#FF6B8B", size=17)
 
-    # ---------- правая часть ----------
+    # ---------- правая часть: отладка и результат ----------
+
     debug_list = ft.ListView(
         expand=True,
         spacing=2,
@@ -191,7 +212,7 @@ def main(page: ft.Page):
         bgcolor=BLOCK_BG,
         border_radius=12,
         padding=10,
-        expand=True,  # <<< вторая половина правой части
+        expand=True,
         content=ft.Column(
             [
                 ft.Text("Результат", color=TEXT_LIGHT, size=20),
@@ -199,14 +220,16 @@ def main(page: ft.Page):
                 result_output,
             ],
             expand=True,
-            scroll=ft.ScrollMode.AUTO,  # <<< отдельный скролл для результата
+            scroll=ft.ScrollMode.AUTO,
         ),
     )
-
 
     # ---------- служебные функции ----------
 
     def refresh_fields(e=None):
+        """
+        Управляет видимостью полей ввода в зависимости от выбранного шифра.
+        """
         c = cipher_select.value
 
         key_field.visible = (c == "vertical")
@@ -227,6 +250,9 @@ def main(page: ft.Page):
     refresh_fields()
 
     def render_debug(text: str, is_error: bool = False):
+        """
+        Выводит отладочную информацию или сообщение об ошибке в правой панели.
+        """
         debug_list.controls.clear()
 
         if is_error:
@@ -285,7 +311,12 @@ def main(page: ft.Page):
             )
 
     # ---------- обработчик кнопки ----------
+
     def run_cipher(e):
+        """
+        Основной обработчик: запускает шифрование или расшифровку
+        в зависимости от выбранного шифра и режима работы.
+        """
         result_output.value = ""
         status_text.value = ""
 
@@ -293,14 +324,14 @@ def main(page: ft.Page):
         mode = mode_select.value
         raw_txt = input_text.value
 
-        # нормализация для шифрования/расшифровки
+        # нормализация входного текста
         if mode == "encrypt":
             working_txt = normalize_encrypt(raw_txt)
         else:
             working_txt = normalize_decrypt(raw_txt)
 
         try:
-            # Вертикальная
+            # вертикальная перестановка
             if cipher == "vertical":
                 key = key_field.value
                 if mode == "encrypt":
@@ -308,9 +339,8 @@ def main(page: ft.Page):
                 else:
                     dbg, res = decrypt_vertical(working_txt, key)
 
-            # Маршрутная
+            # маршрутная перестановка
             elif cipher == "route":
-                # длина нормализованного текста/шифртекста
                 norm_len = len(working_txt)
                 if norm_len == 0:
                     raise ValueError("Текст после нормализации пуст.")
@@ -326,7 +356,7 @@ def main(page: ft.Page):
                         raise ValueError("Число строк должно быть > 0.")
                     cols = norm_len // rows + (1 if norm_len % rows != 0 else 0)
                     route_cols.value = str(cols)
-                else:  # cols
+                else:
                     if not route_cols.value:
                         raise ValueError("Укажите число столбцов.")
                     cols = int(route_cols.value)
@@ -345,7 +375,7 @@ def main(page: ft.Page):
                 else:
                     dbg, res = decrypt_route(working_txt, rows, cols, rmode)
 
-            # Блочная
+            # блочная перестановка
             elif cipher == "block":
                 if not block_size.value:
                     raise ValueError("Укажите размер блока.")
@@ -362,7 +392,7 @@ def main(page: ft.Page):
 
             render_debug(dbg, is_error=False)
 
-            # вывод в GUI с нужной денормализацией
+            # вывод результата в удобном виде
             if mode == "encrypt":
                 result_output.value = output_encrypt(res, not_print=True)
             else:
@@ -377,7 +407,6 @@ def main(page: ft.Page):
 
         page.update()
 
-
     run_button = ft.ElevatedButton(
         text="Выполнить",
         bgcolor=ACCENT,
@@ -389,7 +418,7 @@ def main(page: ft.Page):
         ),
     )
 
-    # ---------- панели ----------
+    # ---------- сборка панелей ----------
 
     left_panel = ft.Container(
         width=420,
@@ -398,7 +427,12 @@ def main(page: ft.Page):
         padding=16,
         content=ft.Column(
             [
-                ft.Text("Параметры шифрования", size=22, weight=ft.FontWeight.BOLD, color=TEXT_LIGHT),
+                ft.Text(
+                    "Параметры шифрования",
+                    size=22,
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_LIGHT,
+                ),
                 cipher_select,
                 mode_select,
                 input_text,
@@ -431,8 +465,7 @@ def main(page: ft.Page):
             spacing=12,
             expand=True,
         ),
-)
-
+    )
 
     page.add(
         ft.Row(
