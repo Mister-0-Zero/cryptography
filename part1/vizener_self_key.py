@@ -1,5 +1,5 @@
 # Vigenère Autokey (RU, без "ё"): encode/decode
-from printer import printer
+from baseFunctionForCryptography.baseFunction import output_text as printer
 
 RU_LOWER = "абвгдежзийклмнопрстуфхцчшщъыьэюя"
 RU_UPPER = RU_LOWER.upper()
@@ -66,7 +66,7 @@ def vigenere_autokey_decrypt_ru(text: str, key: str) -> str:
 
 # Пример
 if __name__ == "__main__":
-    phrase = "веревка рвется всегда в самом тонком местетчк"
+    phrase = "Не все те повара, что с длинными ножами ходят."
     key = "м"
     c = vigenere_autokey_encrypt_ru(phrase, key)
     d = vigenere_autokey_decrypt_ru(c, key)

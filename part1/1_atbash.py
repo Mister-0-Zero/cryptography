@@ -4,4 +4,4 @@ text = normalize_text()
 
 text_chipper = text[::-1]
 
-output_text(text_chipper)
+output_text(text_chipper, False)
